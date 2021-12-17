@@ -2,11 +2,25 @@
 setup
 install
 
+mkdir .husky
+
+cd .husky
+
+touch pre-commit
+
+chmod +x pre-commit
+
+cat >pre-commit <<EOL
+echo "pre-commit" && exit 1
+EOL
+
+cd ..
+
 npx --no-install husky install
 
-# Test pre-commit
-hg add package.json
-npx --no-install husky add pre-commit "echo \"pre-commit\" && exit 1"
+# Test hooks installed
+expect 0 "cat ./.hg/hgrc | grep 'pre-commit='"
+
 expect 255 "hg commit -m foo"
 
 # Uninstall
