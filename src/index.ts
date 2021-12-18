@@ -33,7 +33,7 @@ export function install(): void {
     // Create .husky/_
     fs.mkdirSync(p.join(HUSKY_DIR, '_'), { recursive: true })
 
-    // hg not support sub directory .hgignore
+    // Hg not support sub directory .hgignore
     // Create .hgignore
     let ignoreRules = ''
     try {
@@ -56,7 +56,7 @@ export function install(): void {
       p.join(HUSKY_DIR, '_/husky.sh')
     )
 
-    // add already exists hooks to .hg/hgrc
+    // Add already exists hooks to .hg/hgrc
     const scripts = utils.getHookScripts()
 
     setHooks(
@@ -66,11 +66,11 @@ export function install(): void {
       true
     )
   } catch (e) {
-    l('hg hooks failed to install')
+    l('Hg hooks failed to install')
     throw e
   }
 
-  l('hg hooks installed')
+  l('Hg hooks installed')
 }
 
 export function set(file: string, cmd: string): void {
@@ -99,5 +99,5 @@ export function add(file: string, cmd: string): void {
 export function uninstall(): void {
   clearHooks()
 
-  l(`hg hooks uninstalled`)
+  l(`Hg hooks uninstalled`)
 }

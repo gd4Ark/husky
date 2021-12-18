@@ -17,7 +17,7 @@ interface Hook {
 // Logger
 export const l = (msg: string): void => console.log(`husky - ${msg}`)
 
-// hg command
+// Hg command
 export const hg = (args: string[]): cp.SpawnSyncReturns<string> =>
   cp.spawnSync('hg', args, { stdio: 'pipe', encoding: 'utf-8' })
 
