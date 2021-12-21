@@ -4,9 +4,7 @@ import config = require('./config')
 import utils = require('./utils')
 
 const { HUSKY_DIR } = config
-// @ts-ignore
-const { l, hg, getConfig, setConfig, getHookScripts, setHooks, clearHooks } =
-  utils
+const { l, hg, setHooks, clearHooks, getHuskyPath } = utils
 
 export function install(): void {
   // Ensure that we're inside a hg repository
@@ -42,7 +40,7 @@ export function install(): void {
       console.log('Creating .hgignore')
     }
 
-    const appendIgnoreRules = '\n ' + p.join(HUSKY_DIR, '_') + '\n'
+    const appendIgnoreRules = '\n' + p.join(HUSKY_DIR, '_') + '\n'
 
     if (!ignoreRules.includes(appendIgnoreRules)) {
       ignoreRules += appendIgnoreRules
@@ -73,8 +71,8 @@ export function install(): void {
   l('Hg hooks installed')
 }
 
-export function set(file: string, cmd: string): void {
-  const dir = p.dirname(file)
+export function set(hook: string, cmd: string): void {
+  const dir = getHuskyPath()
 
   if (!fs.existsSync(dir)) {
     throw new Error(
@@ -82,17 +80,19 @@ export function set(file: string, cmd: string): void {
     )
   }
 
-  setHooks([{ name: file, cmd }])
+  setHooks([{ name: hook, cmd }])
 
-  l(`created ${file}`)
+  l(`created ${hook}`)
 }
 
-export function add(file: string, cmd: string): void {
+export function add(hook: string, cmd: string): void {
+  const file = p.join(getHuskyPath(), hook)
+
   if (fs.existsSync(file)) {
     fs.appendFileSync(file, `${cmd}\n`)
-    l(`updated ${file}`)
+    l(`updated ${hook}`)
   } else {
-    set(file, cmd)
+    set(hook, cmd)
   }
 }
 

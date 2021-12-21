@@ -29,7 +29,15 @@ export const getConfigPath = () => p.join(getHgRoot(), '.hg/hgrc')
 export const getHuskyPath = () => p.join(getHgRoot(), HUSKY_DIR)
 
 export function getConfig(): ReturnType<typeof ini.parse> {
-  return ini.parse(fs.readFileSync(getConfigPath(), 'utf8'))
+  let config = ''
+
+  // File not found don't throw error, just return empty config
+  // Because we will create or update this file later
+  try {
+    config = fs.readFileSync(getConfigPath(), 'utf8')
+  } finally {
+    return ini.parse(config)
+  }
 }
 
 export function setConfig(config: Config): void {
@@ -39,15 +47,9 @@ export function setConfig(config: Config): void {
 export function writeHookScript(hook: Hook): void {
   const huskyDir = getHuskyPath()
 
-  fs.writeFileSync(
-    p.join(huskyDir, hook.name),
-    `#!/bin/bash
-    . "$(dirname "$0")/_/husky.sh"
-    
-    ${hook.cmd}
-    `,
-    { mode: 0o0755 }
-  )
+  const script = `#!/bin/bash\n. "$(dirname "$0")/_/husky.sh"\n\n${hook.cmd}\n`
+
+  fs.writeFileSync(p.join(huskyDir, hook.name), script, { mode: 0o0755 })
 }
 
 export function getHookScripts(): string[] {
