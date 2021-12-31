@@ -1,6 +1,6 @@
 # husky
 
-> Modern native Git hooks made easy
+> Modern native Hg hooks made easy, Based on [husky](https://github.com/typicode/husky)
 
 Husky improves your commits and more 🐶 *woof!*
 
@@ -22,14 +22,14 @@ npm run prepare
 Add a hook:
 
 ```sh
-npx husky add .husky/pre-commit "npm test"
-git add .husky/pre-commit
+npx husky add pre-commit "npm test"
+hg add .husky/pre-commit
 ```
 
 Make a commit:
 
 ```sh
-git commit -m "Keep calm and commit"
+hg commit -m "Keep calm and commit"
 # `npm test` will run
 ```
 

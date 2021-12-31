@@ -2,16 +2,16 @@
 setup
 install
 
-f=".husky/pre-commit"
+h="pre-commit"
+f="./.husky/pre-commit"
 
 npx --no-install husky install
 
-npx --no-install husky add $f "foo"
-grep -m 1 _ $f && grep foo $f && ok
+npx --no-install husky add $h "foo"
+grep -m 1 _ $f && grep foo $h && ok
 
-npx --no-install husky add .husky/pre-commit "bar"
+npx --no-install husky add $h "bar"
 grep -m 1 _ $f && grep foo $f && grep bar $f && ok
 
-npx --no-install husky set .husky/pre-commit "baz"
+npx --no-install husky set $h "baz"
 grep -m 1 _ $f && grep foo $f || grep bar $f || grep baz $f && ok
-

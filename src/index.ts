@@ -1,19 +1,16 @@
-import cp = require('child_process')
 import fs = require('fs')
 import p = require('path')
+import config = require('./config')
+import utils = require('./utils')
 
-// Logger
-const l = (msg: string): void => console.log(`husky - ${msg}`)
+const { HUSKY_DIR } = config
+const { l, hg, setHooks, clearHooks, getHuskyPath } = utils
 
-// Git command
-const git = (args: string[]): cp.SpawnSyncReturns<Buffer> =>
-  cp.spawnSync('git', args, { stdio: 'inherit' })
-
-export function install(dir = '.husky'): void {
-  // Ensure that we're inside a git repository
-  // If git command is not found, status is null and we should return.
+export function install(): void {
+  // Ensure that we're inside a hg repository
+  // If hg command is not found, status is null and we should return.
   // That's why status value needs to be checked explicitly.
-  if (git(['rev-parse']).status !== 0) {
+  if (hg(['root']).status !== 0) {
     return
   }
 
@@ -21,68 +18,86 @@ export function install(dir = '.husky'): void {
   const url = 'https://git.io/Jc3F9'
 
   // Ensure that we're not trying to install outside of cwd
-  if (!p.resolve(process.cwd(), dir).startsWith(process.cwd())) {
+  if (!p.resolve(process.cwd(), HUSKY_DIR).startsWith(process.cwd())) {
     throw new Error(`.. not allowed (see ${url})`)
   }
 
-  // Ensure that cwd is git top level
-  if (!fs.existsSync('.git')) {
-    throw new Error(`.git can't be found (see ${url})`)
+  // Ensure that cwd is hg top level
+  if (!fs.existsSync('.hg')) {
+    throw new Error(`.hg can't be found (see ${url})`)
   }
 
   try {
     // Create .husky/_
-    fs.mkdirSync(p.join(dir, '_'), { recursive: true })
+    fs.mkdirSync(p.join(HUSKY_DIR, '_'), { recursive: true })
 
-    // Create .husky/_/.gitignore
-    fs.writeFileSync(p.join(dir, '_/.gitignore'), '*')
+    // Hg not support sub directory .hgignore
+    // Create .hgignore
+    let ignoreRules = ''
+    try {
+      ignoreRules = fs.readFileSync('.hgignore', 'utf8')
+    } catch (err) {
+      console.log('Creating .hgignore')
+    }
+
+    const appendIgnoreRules = '\n' + p.join(HUSKY_DIR, '_') + '\n'
+
+    if (!ignoreRules.includes(appendIgnoreRules)) {
+      ignoreRules += appendIgnoreRules
+
+      fs.writeFileSync('.hgignore', ignoreRules)
+    }
 
     // Copy husky.sh to .husky/_/husky.sh
-    fs.copyFileSync(p.join(__dirname, '../husky.sh'), p.join(dir, '_/husky.sh'))
+    fs.copyFileSync(
+      p.join(__dirname, '../husky.sh'),
+      p.join(HUSKY_DIR, '_/husky.sh')
+    )
 
-    // Configure repo
-    const { error } = git(['config', 'core.hooksPath', dir])
-    if (error) {
-      throw error
-    }
+    // Add already exists hooks to .hg/hgrc
+    const scripts = utils.getHookScripts()
+
+    setHooks(
+      scripts.map((name) => ({
+        name
+      })),
+      true
+    )
   } catch (e) {
-    l('Git hooks failed to install')
+    l('Hg hooks failed to install')
     throw e
   }
 
-  l('Git hooks installed')
+  l('Hg hooks installed')
 }
 
-export function set(file: string, cmd: string): void {
-  const dir = p.dirname(file)
+export function set(hook: string, cmd: string): void {
+  const dir = getHuskyPath()
+
   if (!fs.existsSync(dir)) {
     throw new Error(
-      `can't create hook, ${dir} directory doesn't exist (try running husky install)`,
+      `can't create hook, ${dir} directory doesn't exist (try running husky install)`
     )
   }
 
-  fs.writeFileSync(
-    file,
-    `#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+  setHooks([{ name: hook, cmd }])
 
-${cmd}
-`,
-    { mode: 0o0755 },
-  )
-
-  l(`created ${file}`)
+  l(`created ${hook}`)
 }
 
-export function add(file: string, cmd: string): void {
+export function add(hook: string, cmd: string): void {
+  const file = p.join(getHuskyPath(), hook)
+
   if (fs.existsSync(file)) {
     fs.appendFileSync(file, `${cmd}\n`)
-    l(`updated ${file}`)
+    l(`updated ${hook}`)
   } else {
-    set(file, cmd)
+    set(hook, cmd)
   }
 }
 
 export function uninstall(): void {
-  git(['config', '--unset', 'core.hooksPath'])
+  clearHooks()
+
+  l(`Hg hooks uninstalled`)
 }

@@ -3,5 +3,5 @@ setup
 install
 
 # Should not fail
-rm -rf .git
+rm -rf .hg
 expect 0 "npx --no-install husky install"

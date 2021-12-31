@@ -23,7 +23,7 @@ const hook = (fn: (a1: string, a2: string) => void) => (): void =>
 
 // CLI commands
 const cmds: { [key: string]: () => void } = {
-  install: (): void => (ln > 1 ? help(2) : h.install(x)),
+  install: (): void => (ln > 1 ? help(2) : h.install()),
   uninstall: h.uninstall,
   set: hook(h.set),
   add: hook(h.add),
